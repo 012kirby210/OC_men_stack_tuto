@@ -1,0 +1,11 @@
+{
+  "name": "oc_passez_au_full_stack_avec_node_express_et_mongodb",
+  "version": "1.0.0",
+  "description": "tuto men",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}

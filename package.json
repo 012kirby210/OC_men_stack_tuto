@@ -2,10 +2,18 @@
   "name": "oc_passez_au_full_stack_avec_node_express_et_mongodb",
   "version": "1.0.0",
   "description": "tuto men",
-  "main": "index.js",
+  "main": "nodemon server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "nodemon": "^2.0.22"
+  },
+  "devDependencies": {
+    "eslint": "^8.41.0",
+    "eslint-config-google": "^0.14.0"
+  }
 }

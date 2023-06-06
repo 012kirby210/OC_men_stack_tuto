@@ -1,10 +1,15 @@
 const Thing = require('../models/Things');
+const fs = require('fs');
 
 exports.createThing = (req, res, next) =>{
-  delete req.body._id;
+  const thingObject = JSON.parse(req.body.thing);
+  delete thingObject._id;
+  delete thingObject._userId;
 
   const thing = new Thing({
-    ...req.body,
+    ...thingObject,
+    userId: req.auth.userId,
+    imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
   });
   thing.save()
       .then(()=>{
@@ -14,15 +19,43 @@ exports.createThing = (req, res, next) =>{
 };
 
 exports.updateAThing = (req, res, next)=>{
-  Thing.updateOne({_id: req.params.id}, {...req.body, _id: req.params.id})
-      .then( (thing)=>res.status(200).json(thing))
-      .catch( (error)=>res.status(400).json({error}));
+  const thingObject = req.file ? {
+    ...JSON.parse(req.body.thing),
+    imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
+  } : {
+    ...req.body,
+  };
+  delete thingObject._userId;
+
+  Thing.findOne({_id: req.params.id}).then( (thing) => {
+    if (thing.userId !== req.auth.userId) {
+      res.status(401).json({message: 'Non autorisé'});
+    } else {
+      Thing.updateOne({_id: req.params.id},
+          {...thingObject, _id: req.params.id})
+          .then( ()=>{
+            res.status(200).json({message: 'Object modifié'});
+          })
+          .catch((error)=>res.status(400).json({error}));
+    }
+  }).catch( (error)=>res.status(400).json({error}));
 };
 
 exports.deleteAThing = (req, res, next)=>{
-  Thing.deleteOne({_id: req.params.id})
-      .then( ()=>res.status(200).json({message: 'Objet supprimé'}))
-      .catch( (error)=>res.status(404).json({error}));
+  Thing.findOne({_id: req.params.id})
+      .then((thing)=>{
+        if ( thing.userId !== req.auth.userId ) {
+          res.status(400).json({message: 'Non autorisé'});
+        } else {
+          const filename = thing.imageUrl.split('images/')[1];
+          fs.unlink(`images/${filename}`, () =>{
+            Thing.deleteOne({_id: req.params.id})
+                .then(()=>res.status(200).json({message: 'objet supprimé.'}))
+                .catch((error)=>res.status(400).json({error}));
+          });
+        }
+      })
+      .catch((error)=>res.status(500).json({error}));
 };
 
 exports.getAThing = (req, res, next)=>{
